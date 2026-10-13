@@ -7,23 +7,26 @@
     900
   ],
   "fps": 30,
-  "mp4_bytes": 4447687,
-  "poster_bytes": 138562,
+  "mp4_bytes": 5449122,
+  "poster_bytes": 139000,
+  "gif_bytes": 9225846,
+  "gif_width": 1200,
+  "gif_fps": 10,
   "stages": [
     {
       "time": 0.0,
       "stage": "Search"
     },
     {
-      "time": 10.79,
+      "time": 11.26,
       "stage": "Compare two real suppliers"
     },
     {
-      "time": 15.68,
+      "time": 15.64,
       "stage": "Supplier card and sourced terms"
     },
     {
-      "time": 19.66,
+      "time": 19.67,
       "stage": "Editable RFQ; no email sent"
     },
     {
@@ -31,11 +34,12 @@
       "stage": "Browser-local notes and status"
     },
     {
-      "time": 32.28,
+      "time": 32.24,
       "stage": "Shortlist pipeline"
     }
   ],
   "database_writes": false,
   "supplier_contact": false,
-  "note": "Disposable browser-local shortlist notes and rejection decision; no RFQ sent. Silent real Chromium recording; pointer overlay only."
+  "note": "Disposable browser-local shortlist notes and rejection decision; no RFQ sent. Silent real Chromium recording; pointer overlay only.",
+  "gif_duration_seconds": 18
 }

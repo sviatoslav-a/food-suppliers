@@ -223,8 +223,15 @@ def main() -> None:
         run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y',
              '-ss', f'{trim:.3f}', '-i', str(raw), '-t', '39.5',
              '-an', '-vf', 'fps=30', '-c:v', 'libx264', '-preset', 'slow',
-             '-crf', '22', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
+             '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
              str(mp4)])
+        gif = out / 'scout-demo.gif'
+        # Short excerpt, not lower resolution. Full walkthrough stays in the MP4.
+        run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y',
+             '-i', str(mp4), '-t', '18', '-filter_complex',
+             '[0:v]fps=10,scale=1200:-1:flags=lanczos,split[a][b];'
+             '[a]palettegen=max_colors=96[p];[b][p]paletteuse=dither=none',
+             '-loop', '0', str(gif)])
         poster = out / 'scout-demo.jpg'
         run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y',
              '-ss', '12', '-i', str(mp4), '-frames:v', '1', '-q:v', '3', str(poster)])
@@ -246,6 +253,10 @@ def main() -> None:
             'fps': 30,
             'mp4_bytes': mp4.stat().st_size,
             'poster_bytes': poster.stat().st_size,
+            'gif_bytes': gif.stat().st_size,
+            'gif_width': 1200,
+            'gif_fps': 10,
+            'gif_duration_seconds': 18,
             'stages': stages,
             'database_writes': False,
             'supplier_contact': False,
