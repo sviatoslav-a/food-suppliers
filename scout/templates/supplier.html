@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import score_ring, badges, parts %}
+{% block title %}{{ s.name }} · Scout{% endblock %}
+{% block page %}supplier{% endblock %}
+{% macro site(src) -%}{% if src %}<a class="src site" href="{{ src }}" target="_blank" rel="noopener" title="{{ src }}">сайт ↗</a>{% endif %}{%- endmacro %}
+{% macro ask() -%}<span class="ask">нет на сайте · <a href="#rfq">запросить</a></span>{%- endmacro %}
+{% block main %}
+<div class="wrap" data-supplier="{{ s.id }}" data-name="{{ s.name }}">
+  <nav class="crumbs" aria-label="Навигация"><a href="/{% if keep %}?{{ keep }}{% endif %}" data-back>← К результатам</a></nav>
+  <header class="sp-head">
+    <div>
+      <h1>{{ s.name }}</h1>
+      <div class="sub" style="margin-top:6px">{{ s.legal_name or '' }}{% if s.inn %} · ИНН {{ s.inn }}{% endif %}{% if s.home_city %} · {{ s.home_city }}{% endif %}</div>
+      {{ badges(s) }}
+      <p class="desc" style="max-width:70ch">{{ s.description }}</p>
+    </div>
+    <div style="display:grid;gap:8px;justify-items:end">
+      {{ score_ring(s.score) }}
+      <button class="btn small" type="button" data-shortlist="{{ s.id }}" aria-pressed="false">☆ В шорт-лист</button>
+      <button class="btn small" type="button" data-compare="{{ s.id }}" aria-pressed="false">⇄ Сравнить</button>
+    </div>
+  </header>
+
+  <div class="sp-grid">
+    <div>
+      <section class="box" aria-labelledby="h-terms">
+        <h2 id="h-terms">Условия поставки</h2>
+        <dl class="kv">
+          <dt>Минимальный заказ</dt><dd data-field="moq">{% if s.moq %}{{ s.moq.text }} {{ site(s.moq.source) }}{% else %}{{ ask() }}{% endif %}<span data-mine="moq"></span></dd>
+          <dt>Доставка</dt><dd data-field="delivery">{% if s.delivery %}{{ s.delivery.text }} {{ site(s.delivery.source) }}{% else %}{{ ask() }}{% endif %}</dd>
+          <dt>Где работают</dt><dd data-field="area">{% if s.service_area %}{{ s.service_area.text }} {{ site(s.service_area.source) }}{% else %}{{ s.where_why or ask() }}{% endif %}</dd>
+          <dt>Оплата</dt><dd>{{ s.payment or ask() }}</dd>
+          <dt>Документы</dt><dd data-field="certs">{% if s.certificates %}{% for c in s.certificates %}{{ c.text }} {{ site(c.source) }}{% if not loop.last %}<br>{% endif %}{% endfor %}{% else %}{{ ask() }}{% endif %}</dd>
+        </dl>
+        <p class="muted" style="font-size:13px">Документы указаны со слов сайта поставщика. Действительность деклараций и сертификатов в реестре Росаккредитации не проверялась.</p>
+        <div class="legend"><span><span class="src site">сайт ↗</span> со страницы поставщика</span><span><span class="src reg">ЕГРЮЛ</span> из реестра ФНС</span><span><span class="src me">вы</span> внесено вами</span></div>
+      </section>
+
+      <section class="box" aria-labelledby="h-prices">
+        <h2 id="h-prices">Ассортимент и цены</h2>
+        {% if s.products %}<div class="badges">{% for x in s.products %}<span class="tag line">{{ x }}</span>{% endfor %}</div>{% endif %}
+        {% if s.prices %}
+        <table class="prices" data-prices>
+          <thead><tr><th>Товар</th><th style="text-align:right">Цена</th><th></th></tr></thead>
+          <tbody>{% for x in s.prices %}<tr><td>{{ x.product }}</td><td class="num">{{ x.price | rub }} / {{ x.unit }}</td><td>{{ site(x.source) }}</td></tr>{% endfor %}</tbody>
+        </table>
+        {% else %}<p class="ask">Цен на сайте нет. Запросите прайс для HoReCa письмом ниже.</p>{% endif %}
+      </section>
+
+      <section class="box" id="rfq" aria-labelledby="h-rfq">
+        <h2 id="h-rfq">Письмо-запрос</h2>
+        <p class="muted" style="margin-top:-6px;font-size:14px">Собрано из того, чего не хватает на сайте. Отредактируйте и отправьте.</p>
+        <label class="field">Тема<input class="input" data-rfq-subject value="{{ rfq.subject }}"></label>
+        <label class="field" style="margin-top:10px">Текст<textarea class="input" rows="12" data-rfq-body>{{ rfq.body }}</textarea></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          <button class="btn" type="button" data-copy-rfq>Скопировать</button>
+          {% if rfq.to %}<a class="btn primary" data-mailto href="mailto:{{ rfq.to }}">Открыть в почте</a>{% endif %}
+          <button class="btn ghost" type="button" data-rfq-sent>Отметить: запрос отправлен</button>
+        </div>
+      </section>
+    </div>
+
+    <aside>
+      <section class="box" aria-labelledby="h-contacts">
+        <h2 id="h-contacts">Контакты</h2>
+        <div class="contact-list">
+          <a href="{{ s.website }}" target="_blank" rel="noopener" data-contact="site"><span>{{ s.website.split('//')[1] }}</span><span>↗</span></a>
+          {% for x in s.emails %}<a href="mailto:{{ x.value }}" data-contact="email"><span>{{ x.value }}</span><span class="src site" title="{{ x.source }}">сайт</span></a>{% endfor %}
+          {% for x in s.phones %}<a href="tel:{{ x.value | replace(' ', '') | replace('(', '') | replace(')', '') | replace('-', '') }}" data-contact="phone"><span>{{ x.value }}</span><span class="src site" title="{{ x.source }}">сайт</span></a>{% endfor %}
+        </div>
+        {% if not s.emails and not s.phones %}<p class="ask">Телефон и почту на сайте не нашли автоматически. Откройте сайт.</p>{% endif %}
+        <p class="next" style="margin-bottom:0"><b>Шаг</b><span>{{ s.next_action }}</span></p>
+      </section>
+
+      <section class="box" aria-labelledby="h-mine" data-mine-box>
+        <h2 id="h-mine">Моя работа с поставщиком</h2>
+        <div class="status-row" role="group" aria-label="Статус" data-status-row>
+          {% for v, l in [('new','Новый'),('sent','Запрос отправлен'),('quote','Получено КП'),('deal','Договор'),('no','Отказ')] %}
+          <button type="button" data-status="{{ v }}" aria-pressed="false">{{ l }}</button>{% endfor %}
+        </div>
+        <label class="field" style="margin-top:12px">Заметка<textarea class="input" data-note placeholder="Например: менеджер Анна, обещали прайс в пятницу"></textarea></label>
+        <div class="quote">
+          <label class="field">Цена из КП<input class="input" data-quote="price" placeholder="₽/кг"></label>
+          <label class="field">Мин. заказ из КП<input class="input" data-quote="moq" placeholder="например, 10 000 ₽"></label>
+        </div>
+        <div class="saved" data-saved aria-live="polite"></div>
+        <p class="muted" style="font-size:12.5px;margin:4px 0 0">Хранится в этом браузере. В рабочей версии синхронизируется с вашей командой.</p>
+      </section>
+
+      <section class="box" aria-labelledby="h-reg">
+        <h2 id="h-reg">Юрлицо {% if s.verified_egrul %}<span class="src reg">ЕГРЮЛ</span>{% else %}<span class="tag warn">не проверено</span>{% endif %}</h2>
+        <dl class="kv" style="grid-template-columns:110px 1fr">
+          <dt>Название</dt><dd>{{ s.legal_name or '—' }}</dd>
+          <dt>ИНН</dt><dd data-field="inn">{{ s.inn or 'не нашли на сайте' }}</dd>
+          <dt>ОГРН</dt><dd>{{ s.ogrn or '—' }}</dd>
+          <dt>Статус</dt><dd>{{ {'active':'действует','liquidated':'ликвидирована'}.get(s.status, 'не проверен') }}</dd>
+          <dt>Регистрация</dt><dd>{{ s.reg_date or '—' }}</dd>
+          <dt>Размер</dt><dd>{{ LABELS.get(s.sme, '—') if s.sme else '—' }}{% if s.verified_registry %} · в реестре МСП{% endif %}</dd>
+          <dt>ОКВЭД</dt><dd>{{ s.okved_main or '—' }}{% if s.okved_name %} · {{ s.okved_name }}{% endif %}</dd>
+        </dl>
+        {% if s.inn %}<p style="margin:12px 0 0;font-size:13.5px"><a href="https://egrul.nalog.ru/" target="_blank" rel="noopener">Проверить на egrul.nalog.ru ↗</a></p>{% endif %}
+      </section>
+
+      <section class="box" aria-labelledby="h-score">
+        <h2 id="h-score">Почему {{ s.score }} из 100</h2>
+        {{ parts(s) }}
+      </section>
+
+      <section class="box" aria-labelledby="h-src">
+        <h2 id="h-src">Источники</h2>
+        <ul style="margin:0;padding-left:18px;font-size:13.5px;overflow-wrap:anywhere">
+          {% for u in s.pages %}<li><a href="{{ u }}" target="_blank" rel="noopener">{{ u }}</a></li>{% endfor %}
+        </ul>
+        <p class="muted" style="font-size:12.5px;margin:8px 0 0">Собрано {{ s.extracted_at }}.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import score_ring %}
+{% block title %}Сравнение · Scout{% endblock %}
+{% block page %}compare{% endblock %}
+{% block main %}
+<div class="wrap">
+  <div class="results-bar" style="padding-top:26px">
+    <h1 style="font-size:30px">Сравнение</h1>
+    {% if rows %}
+    <div class="understood">{% if p.category %}<span class="tag">{{ BY_ID[p.category].name }}</span>{% endif %}{% if p.city %}<span class="tag">{{ CITY_BY_ID[p.city].name }}</span>{% endif %}</div>
+    <a class="btn small" style="margin-left:auto" data-export href="/api/export.csv?ids={{ rows | map(attribute='id') | join(',') }}">Скачать CSV</a>
+    {% endif %}
+  </div>
+  {% if rows %}
+  {% set best_score = rows | map(attribute='score') | max %}
+  {% set best_comp = rows | map(attribute='completeness') | max %}
+  <div class="cmp-wrap">
+    <table class="cmp" data-compare-table>
+      <thead><tr><th scope="col"><span class="sr-only">Параметр</span></th>
+        {% for s in rows %}<th scope="col" data-col="{{ s.id }}"><a href="/s/{{ s.id }}{% if keep %}?{{ keep }}{% endif %}">{{ s.name }}</a><br><button class="btn small ghost" type="button" data-remove="{{ s.id }}" style="margin-top:6px">Убрать</button></th>{% endfor %}</tr></thead>
+      <tbody>
+        <tr><th scope="row">Оценка</th>{% for s in rows %}<td class="{{ 'best' if s.score == best_score and rows|length > 1 }}">{{ score_ring(s.score, false) }}</td>{% endfor %}</tr>
+        <tr><th scope="row">География</th>{% for s in rows %}<td>{{ LABELS[s.where] }}{% if s.where_why %}<br><span class="muted" style="font-size:13px">{{ s.where_why }}</span>{% endif %}</td>{% endfor %}</tr>
+        <tr><th scope="row">Мин. заказ</th>{% for s in rows %}<td>{{ s.moq.text if s.moq else '—' }}</td>{% endfor %}</tr>
+        <tr><th scope="row">Доставка</th>{% for s in rows %}<td>{{ s.delivery.text if s.delivery else '—' }}</td>{% endfor %}</tr>
+        <tr><th scope="row">Цены</th>{% for s in rows %}<td>{% for x in s.prices[:3] %}{{ x.product }}: {{ x.price | rub }}/{{ x.unit }}<br>{% else %}—{% endfor %}</td>{% endfor %}</tr>
+        <tr><th scope="row">Документы</th>{% for s in rows %}<td>{{ s.certificates[0].text if s.certificates else '—' }}</td>{% endfor %}</tr>
+        <tr><th scope="row">HoReCa</th>{% for s in rows %}<td>{{ 'да' if s.horeca else 'опт' if s.b2b else '—' }}</td>{% endfor %}</tr>
+        <tr><th scope="row">Юрлицо</th>{% for s in rows %}<td>{{ s.legal_name or '—' }}{% if s.reg_date %}<br><span class="muted" style="font-size:13px">с {{ s.reg_date }}</span>{% endif %}</td>{% endfor %}</tr>
+        <tr><th scope="row">Полнота данных</th>{% for s in rows %}<td class="{{ 'best' if s.completeness == best_comp and rows|length > 1 }}">{{ s.completeness }}%</td>{% endfor %}</tr>
+        <tr><th scope="row">Контакт</th>{% for s in rows %}<td style="overflow-wrap:anywhere">{{ s.emails[0].value if s.emails else s.phones[0].value if s.phones else s.website }}</td>{% endfor %}</tr>
+        <tr><th scope="row">Следующий шаг</th>{% for s in rows %}<td>{{ s.next_action }}</td>{% endfor %}</tr>
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty" data-empty style="margin-bottom:60px">
+    <h3 style="font-size:20px">Нечего сравнивать</h3>
+    <p class="muted">Нажмите «⇄ Сравнить» у 2-4 поставщиков в результатах поиска.</p>
+    <a class="btn primary" href="/">К поиску</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

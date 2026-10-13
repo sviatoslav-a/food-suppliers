@@ -1,0 +1,55 @@
+{
+ "kept": 86,
+ "skipped": [
+  [
+   "agropti.com",
+   "not_food",
+   "not a B2B food supplier"
+  ],
+  [
+   "blackfish-ekb.ru",
+   "retail",
+   "not a B2B food supplier"
+  ],
+  [
+   "ekaterinburg.rospacks.ru",
+   "not_food",
+   "not a B2B food supplier"
+  ],
+  [
+   "gfc-russia.ru",
+   "marketplace",
+   "not a B2B food supplier"
+  ],
+  [
+   "japonica.ru",
+   "not_food",
+   "not a B2B food supplier"
+  ],
+  [
+   "msk.atlant-group.info",
+   "supplier",
+   "duplicate INN 6658460512"
+  ],
+  [
+   "profmaster-horeca.ru",
+   null,
+   "not a B2B food supplier"
+  ],
+  [
+   "restoranica.ru",
+   "retail",
+   "not a B2B food supplier"
+  ],
+  [
+   "rusupak.com",
+   "not_food",
+   "not a B2B food supplier"
+  ],
+  [
+   "промясо.com",
+   "retail",
+   "not a B2B food supplier"
+  ]
+ ]
+}

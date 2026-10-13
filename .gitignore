@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+.env
+.env.*
+!.env.example
+test-results/
+playwright-report/
+data/raw/
+data/registry.sqlite
+data/cache/
+data/*.log
+data/*.building.sqlite
+# Keep data/suppliers.sqlite and JSON reports: the app runs from this snapshot.

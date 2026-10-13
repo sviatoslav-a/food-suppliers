@@ -1,0 +1,35 @@
+{% from '_macros.html' import card %}
+{% set q = res.params %}
+<div class="results-bar" data-context="{{ keep }}">
+  <h2 data-total="{{ res.total }}">{{ res.total }} {{ 'поставщик' if res.total % 10 == 1 and res.total % 100 != 11 else 'поставщика' if res.total % 10 in (2,3,4) and res.total % 100 not in (12,13,14) else 'поставщиков' }}</h2>
+  <div class="understood" data-understood>
+    {% if q.q %}<span>Понял запрос как:</span>{% endif %}
+    {% if q.category %}<span class="tag" data-f="category">{{ BY_ID[q.category].name }}</span>{% endif %}
+    {% if q.city %}<span class="tag" data-f="city">{{ CITY_BY_ID[q.city].name }}</span>{% endif %}
+    {% if q.volume_kg %}<span class="tag" data-f="volume">заказ {{ '%g' % q.volume_kg }} кг</span>{% endif %}
+    {% if q.certs %}<span class="tag" data-f="certs">с документами</span>{% endif %}
+    {% if q.price %}<span class="tag" data-f="price">с ценами</span>{% endif %}
+    {% if q.horeca %}<span class="tag" data-f="horeca">HoReCa</span>{% endif %}
+  </div>
+  <label class="sort">Сортировка
+    <select data-sort aria-label="Сортировка">
+      {% for v, l in [('score','по оценке'),('complete','по полноте данных'),('age','старейшие'),('name','по названию')] %}
+      <option value="{{ v }}" {% if q.sort == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select>
+  </label>
+</div>
+{% if res.registry %}
+<p class="registry-note" data-registry>В реестре МСП ФНС в регионе «{{ res.registry.region }}» по этой категории
+  <b>{{ '{:,}'.format(res.registry.total).replace(',', ' ') }}</b> компаний ({{ '{:,}'.format(res.registry.legal).replace(',', ' ') }} юрлиц). Это ориентир для следующего поиска, а не число проверенных поставщиков. Ниже показаны найденные сайты; условия и контакты могут быть неполными.</p>
+{% endif %}
+{% if res.results %}
+<div class="list">
+  {% for s in res.results %}{{ card(s, keep) }}{% endfor %}
+</div>
+{% else %}
+<div class="empty" data-empty>
+  <h3 style="font-size:20px">Никого не нашли</h3>
+  <p class="muted">Попробуйте убрать фильтры{% if q.city %} или выбрать другой город{% endif %}.</p>
+  <a class="btn" href="/?{% if q.category %}category={{ q.category }}{% endif %}">Сбросить фильтры</a>
+</div>
+{% endif %}

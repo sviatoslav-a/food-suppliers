@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "built_at": "2026-10-13",
+    "registry_as_of": "10.09.2026",
+    "suppliers": "86",
+    "skipped": "10",
+    "sites_checked": "96"
+  },
+  "suppliers": 86,
+  "with_contacts": 85,
+  "coverage": {
+    "phones": 85,
+    "emails": 58,
+    "prices": 34,
+    "moq": 46,
+    "delivery": 72,
+    "certificates": 46,
+    "verified_egrul": 38,
+    "verified_registry": 22
+  },
+  "categories": {
+    "asian": 26,
+    "dairy": 33,
+    "drinks": 33,
+    "fish": 36,
+    "grocery": 56,
+    "meat": 39,
+    "packaging": 22,
+    "veg": 37
+  },
+  "missing_contacts": [
+    "https://bubon-horeca.ru"
+  ],
+  "invalid_source_links": [],
+  "limitations": [
+    "Source-link membership is checked, not semantic correctness of every extracted claim.",
+    "Certificates are website claims, not independently validated certificates.",
+    "Registry matching by INN does not prove a website is owned by that entity.",
+    "Search uses a fixed snapshot; prices and availability must be reconfirmed."
+  ]
+}

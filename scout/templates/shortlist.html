@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Шорт-лист · Scout{% endblock %}
+{% block page %}shortlist{% endblock %}
+{% block main %}
+<div class="wrap">
+  <div class="results-bar" style="padding-top:26px">
+    <h1 style="font-size:30px">Шорт-лист</h1>
+    <span class="muted" style="font-size:14px">Ваша воронка поставщиков: от первого письма до договора.</span>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <a class="btn small" href="#" data-sl-compare>⇄ Сравнить все</a>
+      <a class="btn small" href="#" data-sl-export>Скачать CSV</a>
+    </div>
+  </div>
+  <div data-board></div>
+  <template data-empty-tpl>
+    <div class="empty" data-empty style="margin-bottom:60px">
+      <h3 style="font-size:20px">Пока пусто</h3>
+      <p class="muted">Добавляйте поставщиков кнопкой «☆ В шорт-лист» в поиске или в карточке.</p>
+      <a class="btn primary" href="/">К поиску</a>
+    </div>
+  </template>
+</div>
+{% endblock %}

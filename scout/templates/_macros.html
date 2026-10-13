@@ -1,0 +1,54 @@
+{% macro score_ring(v, label=true) -%}
+<div><div class="score {{ 'low' if v < 45 else 'mid' if v < 65 else '' }}" style="--v:{{ v }}" role="img" aria-label="Оценка {{ v }} из 100"><b>{{ v }}</b></div>{% if label %}<div class="score-l">из 100</div>{% endif %}</div>
+{%- endmacro %}
+
+{% macro badges(s) -%}
+<div class="badges">
+  {% if s.verified_egrul and s.status == 'active' %}<span class="tag ok" title="Действующая компания по данным ЕГРЮЛ">✓ ЕГРЮЛ</span>
+  {% elif s.status == 'liquidated' %}<span class="tag hot">ликвидирована</span>
+  {% elif not s.inn %}<span class="tag warn" title="На сайте не нашли ИНН">ИНН не найден</span>{% endif %}
+  {% if s.where %}<span class="tag {{ 'ok' if s.where in ('local','delivers') else 'line' }}">{{ LABELS[s.where] }}</span>{% endif %}
+  {% if s.horeca %}<span class="tag">HoReCa</span>{% endif %}
+  {% if s.certificates %}<span class="tag">документы</span>{% endif %}
+  {% if s.prices %}<span class="tag">есть цены</span>{% endif %}
+  {% for c in s.categories[:3] %}<span class="tag line">{{ BY_ID[c].name }}</span>{% endfor %}
+</div>
+{%- endmacro %}
+
+{% macro parts(s) -%}
+<div class="parts">
+  {% for x in s.parts %}
+  <div class="part {{ 'neg' if x.points < 0 }}">
+    <span>{{ x.label }}</span>
+    <span class="bar"><i style="width:{{ ((x.points|abs) / (x.max or 15) * 100) | round | int }}%"></i></span>
+    <span class="pts">{{ '%+g' % x.points if x.points < 0 else '%g' % x.points }}{% if x.max %}/{{ x.max|int }}{% endif %}</span>
+    <span class="pw">{{ x.why }}</span>
+  </div>
+  {% endfor %}
+</div>
+{%- endmacro %}
+
+{% macro card(s, keep) -%}
+<article class="sup" data-id="{{ s.id }}" data-name="{{ s.name }}">
+  {{ score_ring(s.score) }}
+  <div>
+    <h3><a href="/s/{{ s.id }}{% if keep %}?{{ keep }}{% endif %}">{{ s.name }}</a></h3>
+    <div class="sub">{{ s.legal_name or '' }}{% if s.inn %} · ИНН {{ s.inn }}{% endif %}{% if s.home_city %} · {{ s.home_city }}{% endif %}</div>
+    {{ badges(s) }}
+    <p class="desc">{{ s.description }}</p>
+    <div class="facts">
+      <div class="fact {{ 'none' if not s.moq }}"><small>Мин. заказ</small><span>{{ s.moq.text if s.moq else 'нет на сайте' }}</span></div>
+      <div class="fact {{ 'none' if not s.delivery }}"><small>Доставка</small><span>{{ s.delivery.text if s.delivery else 'нет на сайте' }}</span></div>
+      <div class="fact {{ 'none' if not s.prices }}"><small>Цены</small><span>{% if s.prices %}{{ s.prices[0].product }}: {{ s.prices[0].price | rub }}/{{ s.prices[0].unit }}{% if s.prices|length > 1 %} и ещё {{ s.prices|length - 1 }}{% endif %}{% else %}по запросу{% endif %}</span></div>
+      <div class="fact {{ 'none' if not (s.emails or s.phones) }}"><small>Контакт</small><span>{{ (s.emails[0].value if s.emails else s.phones[0].value if s.phones else 'форма на сайте') }}</span></div>
+    </div>
+    <details class="why"><summary>Почему {{ s.score }} из 100</summary>{{ parts(s) }}</details>
+    <div class="next"><b>Шаг</b><span>{{ s.next_action }}</span></div>
+  </div>
+  <div class="actions">
+    <button class="btn small" type="button" data-shortlist="{{ s.id }}" aria-pressed="false">☆ В шорт-лист</button>
+    <button class="btn small" type="button" data-compare="{{ s.id }}" aria-pressed="false">⇄ Сравнить</button>
+    <a class="btn small ghost" href="/s/{{ s.id }}{% if keep %}?{{ keep }}{% endif %}">Открыть →</a>
+  </div>
+</article>
+{%- endmacro %}

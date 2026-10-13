@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Scout · поиск поставщиков продуктов{% endblock %}</title>
+  <meta name="description" content="Поиск и сравнение поставщиков продуктов для ресторанов: реальные данные из реестров ФНС и сайтов поставщиков, оценка и следующий шаг.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2315171a'/><text x='16' y='22' font-size='17' text-anchor='middle' fill='%23f6f4ef' font-family='Arial' font-weight='700'>S</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Onest:wght@400;500;600;700&family=Unbounded:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css?v=1">
+  <script>try{const t=localStorage.getItem('scout.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body data-page="{% block page %}{% endblock %}">
+  <a class="skip" href="#main">К содержанию</a>
+  <header class="top">
+    <div class="wrap top-in">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">S</span><span>Scout<small>поиск поставщиков продуктов</small></span></a>
+      <nav class="nav" aria-label="Разделы">
+        <a href="/" {% if self.page() == 'search' %}aria-current="page"{% endif %}>Поиск</a>
+        <a href="/shortlist" {% if self.page() == 'shortlist' %}aria-current="page"{% endif %} data-nav-shortlist>Шорт-лист <span class="count" data-count="shortlist" data-n="0">0</span></a>
+        <a href="/compare" {% if self.page() == 'compare' %}aria-current="page"{% endif %} data-nav-compare>Сравнение <span class="count" data-count="compare" data-n="0">0</span></a>
+        <a href="/about" {% if self.page() == 'about' %}aria-current="page"{% endif %}>Как это работает</a>
+      </nav>
+      <div class="theme-wrap"><button class="icon-btn" type="button" data-theme-toggle aria-label="Сменить тему">◐</button></div>
+    </div>
+  </header>
+  <main id="main">{% block main %}{% endblock %}</main>
+  <footer class="foot">
+    <div class="wrap">
+      Данные: реестр МСП и ЕГРЮЛ (ФНС), сайты поставщиков. Каждый факт со ссылкой на источник.
+      Тестовое задание для Goulash.tech · <a href="https://t.me/zotho">Святослав Алексеев</a> · <a href="/docs">API</a>
+    </div>
+  </footer>
+  <div class="tray" data-tray role="region" aria-label="Сравнение">
+    <span><b data-tray-n>0</b> к сравнению</span>
+    <a class="btn primary" href="/compare" data-tray-go>Сравнить</a>
+    <button class="clear" type="button" data-tray-clear aria-label="Очистить сравнение">✕</button>
+  </div>
+  <div class="toast" data-toast role="status" aria-live="polite"></div>
+  <script src="/static/app.js?v=1" type="module"></script>
+</body>
+</html>

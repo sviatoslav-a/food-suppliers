@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block page %}search{% endblock %}
+{% block main %}
+<section class="wrap hero">
+  <h1>Найдите поставщика и поймите, кому написать первым</h1>
+  <p class="lead">Реальные компании из реестров ФНС и с их сайтов. Каждый поставщик получает оценку под ваш запрос с объяснением, а для недостающих условий готовое письмо-запрос.</p>
+
+  <form class="search" action="/" method="get" data-search role="search">
+    <div class="q-row">
+      <label class="sr-only" for="q">Что ищете</label>
+      <input class="input" id="q" name="q" value="{{ p.q }}" placeholder="Например: сыры для пиццы в Екатеринбурге с документами" autocomplete="off">
+      <button class="btn primary" type="submit">Найти</button>
+    </div>
+    <fieldset class="chips" aria-label="Категория" style="border:0;padding:0;margin:14px 0 0">
+      <legend class="sr-only">Категория</legend>
+      <label class="chip"><input type="radio" name="category" value="" {% if not p.category %}checked{% endif %}>Все категории</label>
+      {% for c in CATEGORIES %}
+      <label class="chip"><input type="radio" name="category" value="{{ c.id }}" {% if p.category == c.id %}checked{% endif %}>{{ c.name }}</label>
+      {% endfor %}
+    </fieldset>
+    <div class="opts">
+      <label class="field">Город
+        <select class="input" name="city">
+          <option value="">Любой</option>
+          {% for c in CITIES %}<option value="{{ c.id }}" {% if p.city == c.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+        </select>
+      </label>
+      <label class="field">Объём заказа, кг
+        <input class="input" name="volume_kg" inputmode="decimal" value="{{ p.volume_kg | default('', true) | replace('.0','') }}" placeholder="например, 50">
+      </label>
+      <div class="toggles" role="group" aria-label="Фильтры">
+        <label><input type="checkbox" name="local" value="1" {% if p.local %}checked{% endif %}>Работают в моём городе</label>
+        <label><input type="checkbox" name="certs" value="1" {% if p.certs %}checked{% endif %}>Есть документы</label>
+        <label><input type="checkbox" name="price" value="1" {% if p.price %}checked{% endif %}>Есть цены</label>
+        <label><input type="checkbox" name="horeca" value="1" {% if p.horeca %}checked{% endif %}>Работают с HoReCa</label>
+        <label><input type="checkbox" name="verified" value="1" {% if p.verified %}checked{% endif %}>Проверены в ЕГРЮЛ</label>
+      </div>
+    </div>
+    <input type="hidden" name="sort" value="{{ p.sort or 'score' }}">
+    {% if not searched %}
+    <div class="examples">Попробуйте:
+      <a href="/?q=сыры+для+пиццы+в+Екатеринбурге+с+документами">сыры для пиццы в Екатеринбурге с документами</a>
+      <a href="/?q=лосось+для+суши+екб">лосось для суши, ЕКБ</a>
+      <a href="/?q=упаковка+для+доставки+Москва">упаковка для доставки, Москва</a>
+      <a href="/?q=овощи+для+ресторана+екб+заказ+30+кг">овощи, заказ 30 кг</a>
+    </div>
+    {% endif %}
+  </form>
+</section>
+
+<section class="wrap" id="results" data-results aria-live="polite">
+  {% if searched %}{% include '_results.html' %}{% else %}
+  <h2 style="font-size:20px;margin:10px 0 0">Категории</h2>
+  <div class="tiles">
+    {% for c in CATEGORIES %}
+    <a class="tile" href="/?category={{ c.id }}"><b>{{ c.name }}</b><span>{{ c.words[:4] | join(', ') }}…</span></a>
+    {% endfor %}
+  </div>
+  <div class="steps">
+    <div class="step"><span class="n">01</span><b>Опишите задачу</b><p>Категория, город, объём. Можно одной фразой.</p></div>
+    <div class="step"><span class="n">02</span><b>Сравните</b><p>Оценка с объяснением: ассортимент, география, надёжность, документы, условия.</p></div>
+    <div class="step"><span class="n">03</span><b>Свяжитесь</b><p>Контакты с источником и готовое письмо с вопросами, которых нет на сайте.</p></div>
+    <div class="step"><span class="n">04</span><b>Ведите шорт-лист</b><p>Статусы, заметки и полученные условия в одном месте, выгрузка в Excel.</p></div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
