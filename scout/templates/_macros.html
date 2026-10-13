@@ -7,7 +7,7 @@
   {% if s.verified_egrul and s.status == 'active' %}<span class="tag ok" title="Действующая компания по данным ЕГРЮЛ">✓ ЕГРЮЛ</span>
   {% elif s.status == 'liquidated' %}<span class="tag hot">ликвидирована</span>
   {% elif not s.inn %}<span class="tag warn" title="На сайте не нашли ИНН">ИНН не найден</span>{% endif %}
-  {% if s.where %}<span class="tag {{ 'ok' if s.where in ('local','delivers') else 'line' }}">{{ LABELS[s.where] }}</span>{% endif %}
+  {% if s.where %}<span data-geography class="tag {{ 'ok' if s.where in ('local','delivers') else 'line' }}">{{ LABELS[s.where] }}</span>{% endif %}
   {% if s.horeca %}<span class="tag">HoReCa</span>{% endif %}
   {% if s.certificates %}<span class="tag">документы</span>{% endif %}
   {% if s.prices %}<span class="tag">есть цены</span>{% endif %}
@@ -32,7 +32,7 @@
 <article class="sup" data-id="{{ s.id }}" data-name="{{ s.name }}">
   {{ score_ring(s.score) }}
   <div>
-    <h3><a href="/s/{{ s.id }}{% if keep %}?{{ keep }}{% endif %}">{{ s.name }}</a></h3>
+    <h3><a data-supplier-link href="/s/{{ s.id }}{% if keep %}?{{ keep }}{% endif %}">{{ s.name }}</a></h3>
     <div class="sub">{{ s.legal_name or '' }}{% if s.inn %} · ИНН {{ s.inn }}{% endif %}{% if s.home_city %} · {{ s.home_city }}{% endif %}</div>
     {{ badges(s) }}
     <p class="desc">{{ s.description }}</p>
@@ -48,7 +48,7 @@
   <div class="actions">
     <button class="btn small" type="button" data-shortlist="{{ s.id }}" aria-pressed="false">☆ В шорт-лист</button>
     <button class="btn small" type="button" data-compare="{{ s.id }}" aria-pressed="false">⇄ Сравнить</button>
-    <a class="btn small ghost" href="/s/{{ s.id }}{% if keep %}?{{ keep }}{% endif %}">Открыть →</a>
+    <a class="btn small ghost" data-supplier-link href="/s/{{ s.id }}{% if keep %}?{{ keep }}{% endif %}">Открыть →</a>
   </div>
 </article>
 {%- endmacro %}

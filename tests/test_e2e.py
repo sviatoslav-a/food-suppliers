@@ -1,6 +1,7 @@
 """Real Chromium user journeys. Run: uv run pytest tests/test_e2e.py -q."""
 import csv
 import io
+import os
 import socket
 import subprocess
 import sys
@@ -14,6 +15,9 @@ from playwright.sync_api import expect
 
 @pytest.fixture(scope='module')
 def live_url():
+    if url := os.environ.get('SCOUT_TEST_URL'):
+        yield url.rstrip('/')
+        return
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
@@ -36,11 +40,24 @@ def live_url():
         process.wait(timeout=10)
 
 
+@pytest.fixture(scope='module')
+def static_mode():
+    return os.environ.get('SCOUT_TEST_MODE') == 'static'
+
+
+@pytest.fixture(scope='module')
+def supplier_records(live_url, static_mode):
+    path = '/static/dataset.json' if static_mode else '/api/search?limit=200'
+    data = httpx.get(live_url + path).json()
+    return data['suppliers' if static_mode else 'results']
+
+
 @pytest.fixture
 def app_page(page, live_url):
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
-    page.goto(live_url)
+    page.goto(live_url + '/')
+    expect(page.locator('html')).to_have_attribute('data-ready', 'true')
     expect(page.locator('[data-tray]')).not_to_be_visible()
     yield page
     assert not errors, errors
@@ -119,10 +136,9 @@ def test_shortlist_quotes_persistence_and_export(app_page, live_url):
     assert ids[-1] not in href
 
 
-def test_rfq_edit_copy_and_explicit_sent(app_page, live_url, context):
+def test_rfq_edit_copy_and_explicit_sent(app_page, live_url, context, supplier_records):
     page = app_page
-    suppliers = httpx.get(live_url + '/api/search?limit=200').json()['results']
-    sid = next(s['id'] for s in suppliers if s['emails'])
+    sid = next(s['id'] for s in supplier_records if s['emails'])
     page.goto(live_url + '/s/' + sid)
     page.locator('[data-rfq-subject]').fill('Запрос на поставку')
     expect(page.locator('[data-mailto]')).to_have_attribute('href', __import__('re').compile('mailto:.*subject=.*'))
@@ -155,11 +171,16 @@ def test_responsive_pages(app_page, live_url, width):
     page.screenshot(path=f'test-results/supplier-{width}.png', full_page=True)
 
 
-def test_no_javascript_search_and_supplier(browser, live_url):
+def test_no_javascript_search_and_supplier(browser, live_url, static_mode, supplier_records):
     context = browser.new_context(java_script_enabled=False)
     page = context.new_page()
     try:
-        page.goto(live_url)
+        page.goto(live_url + '/')
+        if static_mode:
+            expect(page.locator('noscript p')).to_contain_text('включите JavaScript')
+            page.goto(live_url + '/s/' + supplier_records[0]['id'] + '/')
+            expect(page.locator('[data-rfq-body]')).not_to_be_empty()
+            return
         page.locator('[name=q]').fill('молочка екб')
         page.get_by_role('button', name='Найти', exact=True).click()
         expect(page.locator('.sup').first).to_be_visible()

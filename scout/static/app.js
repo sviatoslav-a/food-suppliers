@@ -1,5 +1,5 @@
-// Progressive enhancement for Scout. Pages work without JS; this adds live filtering,
-// shortlist/compare state (localStorage), RFQ helpers and the shortlist board.
+// Shared UI for the FastAPI and static Pages builds.
+import { appUrl, isStatic, source, searchHtml, suppliers } from './data-source.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -32,7 +32,7 @@ function keepQs() {
 }
 function compareHref(ids = compareIds()) {
   const k = keepQs();
-  return `/compare?ids=${ids.join(',')}${k ? '&' + k : ''}`;
+  return appUrl(`/compare?ids=${ids.join(',')}${k ? '&' + k : ''}`);
 }
 function syncUI() {
   const sl = shortlist(), cmp = compareIds();
@@ -107,16 +107,14 @@ function initSearch() {
   const run = async (push = false) => {
     const qs = new URLSearchParams(new FormData(form));
     for (const [k, v] of [...qs]) if (!v || (k === 'sort' && v === 'score')) qs.delete(k);
-    const url = '/' + (qs.toString() ? '?' + qs : '');
-    if (!qs.toString()) { location.href = '/'; return; }
+    const url = appUrl('/' + (qs.toString() ? '?' + qs : ''));
+    if (!qs.toString()) { location.href = appUrl('/'); return; }
     ctrl?.abort();
     ctrl = new AbortController();
     const current = ctrl;
     box.classList.add('loading');
     try {
-      const r = await fetch(url, { headers: { 'x-partial': 'results' }, signal: ctrl.signal });
-      if (!r.ok) throw new Error('Search failed');
-      const html = await r.text();
+      const html = await searchHtml(qs.toString(), ctrl.signal);
       if (current.signal.aborted) return;
       box.innerHTML = html;
       history[push ? 'pushState' : 'replaceState'](null, '', url);
@@ -124,7 +122,10 @@ function initSearch() {
       syncUI();
       $('.examples', form)?.remove();
     } catch (err) {
-      if (err.name !== 'AbortError') form.submit();
+      if (err.name !== 'AbortError') {
+        if (isStatic) { box.textContent = err.message; box.setAttribute('role', 'alert'); }
+        else form.submit();
+      }
     } finally {
       if (ctrl === current) box.classList.remove('loading');
     }
@@ -146,7 +147,7 @@ function initSupplier() {
   if (!root) return;
   const id = root.dataset.supplier;
   const back = $('[data-back]');
-  if (back && lastQuery()) back.href = '/?' + lastQuery();
+  if (back && lastQuery()) back.href = appUrl('/?' + lastQuery());
 
   const entry = () => shortlist()[id] || { name: root.dataset.name, status: 'new', note: '', quote: {}, added: new Date().toISOString().slice(0, 10) };
   const save = (patch, msg = 'Сохранено') => {
@@ -200,7 +201,7 @@ function initCompare() {
     if (!b) return;
     const ids = compareIds().filter((x) => x !== b.dataset.remove);
     store.set('scout.compare', ids);
-    ids.length ? location.replace(compareHref(ids)) : location.replace('/compare?ids=');
+    ids.length ? location.replace(compareHref(ids)) : location.replace(appUrl('/compare?ids='));
   });
   syncUI();
 }
@@ -219,12 +220,13 @@ async function initShortlist() {
     exp?.remove(); cmp?.remove();
     return;
   }
-  exp.href = `/api/export.csv?ids=${ids.join(',')}`;
+  exp.href = isStatic ? '#' : appUrl(`/api/export.csv?ids=${ids.join(',')}`);
   exp.setAttribute('download', 'shortlist.csv');
   cmp.href = compareHref(ids.slice(0, MAX_COMPARE));
   cmp.addEventListener('click', () => store.set('scout.compare', Object.keys(shortlist()).slice(0, MAX_COMPARE)));
   let data = [];
-  try { data = await (await fetch(`/api/suppliers?ids=${ids.join(',')}&${keepQs()}`)).json(); } catch {}
+  try { data = await suppliers(ids, keepQs()); }
+  catch (error) { board.textContent = error.message; board.setAttribute('role', 'alert'); exp.hidden = true; return; }
   const byId = Object.fromEntries(data.map((s) => [s.id, s]));
   exp.addEventListener('click', (event) => {
     event.preventDefault();
@@ -249,7 +251,7 @@ async function initShortlist() {
   const draw = () => {
     const cur = shortlist();
     const currentIds = Object.keys(cur);
-    exp.href = `/api/export.csv?ids=${currentIds.join(',')}&${keepQs()}`;
+    exp.href = isStatic ? '#' : appUrl(`/api/export.csv?ids=${currentIds.join(',')}&${keepQs()}`);
     cmp.href = compareHref(currentIds.slice(0, MAX_COMPARE));
     board.className = 'board';
     board.innerHTML = STATUSES.map(([st, label]) => {
@@ -257,7 +259,7 @@ async function initShortlist() {
       return `<section class="col" data-col="${st}"><h3>${label}<span class="muted mono">${items.length}</span></h3>${items.map(([id, e]) => {
         const s = byId[id];
         return `<article class="mini" data-item="${id}">
-          <a class="name" href="/s/${id}">${escapeHtml(s?.name || e.name || id)}</a>
+          <a class="name" href="${appUrl('/s/' + encodeURIComponent(id))}">${escapeHtml(s?.name || e.name || id)}</a>
           ${s ? `<p>${s.score}/100 · ${escapeHtml(s.emails?.[0]?.value || s.phones?.[0]?.value || s.website)}</p>` : '<p class="muted">нет в текущей базе</p>'}
           ${e.quote?.price || e.quote?.moq ? `<p>КП: ${escapeHtml([e.quote.price, e.quote.moq].filter(Boolean).join(', '))}</p>` : ''}
           ${e.note ? `<p>${escapeHtml(e.note)}</p>` : ''}
@@ -283,8 +285,31 @@ async function initShortlist() {
   draw();
 }
 
-initSearch();
-initSupplier();
-initCompare();
-initShortlist();
-syncUI();
+async function initialize() {
+  if (isStatic) {
+    const data = await source();
+    const p = data.resolve(location.search);
+    if (document.body.dataset.page === 'search' && location.search) {
+      $('[data-results]').innerHTML = data.searchHtml(location.search);
+      for (const input of $$('[data-search] [name]')) {
+        if (input.type === 'radio') input.checked = input.value === (p[input.name] || '');
+        else if (input.type === 'checkbox') input.checked = !!p[input.name];
+        else input.value = p[input.name] ?? '';
+      }
+      $('.examples')?.remove();
+    }
+    const supplier = $('[data-supplier]');
+    if (supplier) data.patch(supplier, data.rate(data.byId[supplier.dataset.supplier], p), p);
+    if (document.body.dataset.page === 'compare') data.renderCompare(location.search);
+  }
+  initSearch();
+  initSupplier();
+  initCompare();
+  await initShortlist();
+  syncUI();
+  document.documentElement.dataset.ready = 'true';
+}
+initialize().catch(error => {
+  const notice = document.createElement('p'); notice.className = 'wrap'; notice.setAttribute('role', 'alert');
+  notice.textContent = error.message; $('#main').prepend(notice);
+});

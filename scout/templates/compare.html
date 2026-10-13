@@ -17,7 +17,7 @@
   <div class="cmp-wrap">
     <table class="cmp" data-compare-table>
       <thead><tr><th scope="col"><span class="sr-only">Параметр</span></th>
-        {% for s in rows %}<th scope="col" data-col="{{ s.id }}"><a href="/s/{{ s.id }}{% if keep %}?{{ keep }}{% endif %}">{{ s.name }}</a><br><button class="btn small ghost" type="button" data-remove="{{ s.id }}" style="margin-top:6px">Убрать</button></th>{% endfor %}</tr></thead>
+        {% for s in rows %}<th scope="col" data-col="{{ s.id }}"><a data-supplier-link href="/s/{{ s.id }}{% if keep %}?{{ keep }}{% endif %}">{{ s.name }}</a><br><button class="btn small ghost" type="button" data-remove="{{ s.id }}" style="margin-top:6px">Убрать</button></th>{% endfor %}</tr></thead>
       <tbody>
         <tr><th scope="row">Оценка</th>{% for s in rows %}<td class="{{ 'best' if s.score == best_score and rows|length > 1 }}">{{ score_ring(s.score, false) }}</td>{% endfor %}</tr>
         <tr><th scope="row">География</th>{% for s in rows %}<td>{{ LABELS[s.where] }}{% if s.where_why %}<br><span class="muted" style="font-size:13px">{{ s.where_why }}</span>{% endif %}</td>{% endfor %}</tr>

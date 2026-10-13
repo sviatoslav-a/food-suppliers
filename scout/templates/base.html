@@ -26,11 +26,12 @@
       <div class="theme-wrap"><button class="icon-btn" type="button" data-theme-toggle aria-label="Сменить тему">◐</button></div>
     </div>
   </header>
+  {% if static_mode %}<noscript><p class="wrap">Для поиска, сравнения и шорт-листа включите JavaScript. Карточки поставщиков доступны по прямым ссылкам.</p></noscript>{% endif %}
   <main id="main">{% block main %}{% endblock %}</main>
   <footer class="foot">
     <div class="wrap">
       Данные: реестр МСП и ЕГРЮЛ (ФНС), сайты поставщиков. Каждый факт со ссылкой на источник.
-      Тестовое задание для Goulash.tech · <a href="https://t.me/zotho">Святослав Алексеев</a> · <a href="/docs">API</a>
+      Тестовое задание для Goulash.tech · <a href="https://t.me/zotho">Святослав Алексеев</a>{% if not static_mode %} · <a href="/docs">API</a>{% endif %}
     </div>
   </footer>
   <div class="tray" data-tray role="region" aria-label="Сравнение">
